@@ -1,0 +1,24 @@
+language: go
+
+# go version
+go:
+  - 1.14.x
+
+os:
+  - linux
+
+# Enable use of Go Modules
+env:
+  - GO111MODULE=on 
+
+before_install:
+  - go get -v golang.org/x/lint/golint
+
+script:
+  - go test -v  ./...
+
+notifications:
+  # Get email notifications on builds (sent to email associated with Travis account)
+  email:
+    on_success: always
+    on_failure: always

@@ -2,10 +2,10 @@
 ### Use of this source code is governed by a MIT-style
 ### license that can be found in the LICENSE file.
 
-FROM arm32v7/alpine
+FROM alpine
 
 RUN apk add --no-cache curl
 
-COPY ./accountd /bin/accountd
-RUN ["chmod", "+x", "/bin/accountd"]
-ENTRYPOINT ["/bin/accountd"]
+COPY ./todod /bin/todod
+RUN ["chmod", "+x", "/bin/todod"]
+ENTRYPOINT ["/bin/todod"]
