@@ -11,10 +11,10 @@ import (
 
 var (
 	getAllToDosQuery = "SELECT id, note, duedate, repeat, completed FROM todo"
-	getToDoQuery     = "SELECT id, note, duedate, repeat, completed FROM todo WHERE id = ?"
-	insertToDoStmt   = "INSERT INTO todo (note, duedate, repeat, completed) VALUES (?, ?, ?, ?)"
-	updateToDoStmt   = "UPDATE todo SET note = ?, duedate = ?, repeat = ?, completed = ? WHERE id = ?"
-	deleteToDoStmt   = "DELETE FROM todo WHERE id = ?"
+	getToDoQuery     = "SELECT id, note, duedate, repeat, completed FROM todo WHERE id = $1"
+	insertToDoStmt   = "INSERT INTO todo (note, duedate, repeat, completed) VALUES ($1, $2, $3, $4)"
+	updateToDoStmt   = "UPDATE todo SET note = $1, duedate = $2, repeat = $3, completed = $4 WHERE id = $5"
+	deleteToDoStmt   = "DELETE FROM todo WHERE id = $1"
 )
 
 // Item represents the data about a To Do list item
@@ -62,7 +62,7 @@ func GetToDoList(db *sql.DB) (*List, error) {
 // wasn't a matching todo.
 func GetToDoItem(db *sql.DB, id int) (*Item, error) {
 	row := db.QueryRow(getToDoQuery, id)
-	td := &Item{}
+	var td Item
 	err := row.Scan(&td.ID,
 		&td.Note,
 		&td.DueDate,
@@ -75,7 +75,7 @@ func GetToDoItem(db *sql.DB, id int) (*Item, error) {
 		return nil, nil
 	}
 
-	return td, nil
+	return &td, nil
 }
 
 // InsertToDo takes the provided todo data, inserts it into the db, and returns the newly created todo ID.

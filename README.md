@@ -37,6 +37,7 @@ Example:
 
 |Verb   | Resource | Description  | Status  | Status Description |
 |:------|:---------|:-------------|--------:|:-------------------|
+|GET    |/health   |Health check, returns "I'm Healthy!" if all's OK| 200| Service healthy |
 |GET    |/todo     |Get all To Do items, do not include `id` in JSON body| 200|All To Do items returned |
 |GET    |/todo/{id}|Get the To Do item identified by {id}| 200|To Do item returned |
 |       |          |              | 404| To do item not found|
@@ -52,7 +53,42 @@ Example:
 |429|Server busy, can retry after `Retry-After` time has expired (in seconds)|
 |500|Internal server error, can retry|
 
+## Examples
+
+```
+curl http://35.227.143.9:80/todos | jq "."
+{
+  "todolist": [
+    {
+      "id": 1,
+      "selfref": "/todos/1",
+      "note": "get groceries",
+      "duedate": "2020-04-01T00:00:00Z",
+      "repeat": false,
+      "completed": false
+    },
+    {
+      "id": 2,
+      "selfref": "/todos/2",
+      "note": "pay bills",
+      "duedate": "2020-04-02T00:00:00Z",
+      "repeat": false,
+      "completed": false
+    },
+    {
+      "id": 3,
+      "selfref": "/todos/3",
+      "note": "walk dog",
+      "duedate": "2020-04-03T12:00:00Z",
+      "repeat": true,
+      "completed": false
+    }
+  ]
+}
+```
+
 # Future Enhancements
 
 1. Support `context` in DB calls
 2. Support partial updates in `PUT` requests
+3. Support for multiple users
