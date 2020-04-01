@@ -29,7 +29,7 @@ type Item struct {
 
 // List is a collection ToDo items, i.e., a To Do List
 type List struct {
-	List []*Item `json:"todolist"`
+	Items []*Item `json:"todolist"`
 }
 
 // GetToDoList will return all ToDo items
@@ -52,7 +52,7 @@ func GetToDoList(db *sql.DB) (*List, error) {
 			return &List{}, errors.Annotate(err, "error scanning result set")
 		}
 
-		tdl.List = append(tdl.List, &td)
+		tdl.Items = append(tdl.Items, &td)
 	}
 
 	return &tdl, nil

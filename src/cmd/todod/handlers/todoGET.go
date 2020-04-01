@@ -65,7 +65,7 @@ func (h handler) handleGet(w http.ResponseWriter, r *http.Request) {
 			todoFound = false
 		}
 	case *todo.List:
-		if len(p.List) == 0 {
+		if len(p.Items) == 0 {
 			todoFound = false
 		}
 	default:
@@ -114,7 +114,7 @@ func (h handler) handleGetToDoList(path string) (item interface{}, errReason con
 
 	h.logger.Debugf("handleGetToDoList() results: %+v", tds)
 
-	for _, todo := range tds.List {
+	for _, todo := range tds.Items {
 		todo.SelfRef = "/" + path + "/" + strconv.Itoa(todo.ID)
 	}
 

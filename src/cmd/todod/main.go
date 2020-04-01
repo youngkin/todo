@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,7 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	log "github.com/sirupsen/logrus"
+	"github.com/youngkin/todoshaleapps/src/cmd/todod/handlers"
 	"github.com/youngkin/todoshaleapps/src/internal/logging"
 	"github.com/youngkin/todoshaleapps/src/internal/platform/constants"
 )
@@ -22,16 +27,18 @@ import (
 //	6.	'curl' examples in README
 
 func main() {
-	// configFileName := flag.String("configFile",
-	// 	"/opt/mockvideo/accountd/config/config",
-	// 	"specifies the location of the accountd service configuration")
-	// secretsDir := flag.String("secretsDir",
-	// 	"/opt/mockvideo/accountd/secrets",
-	// 	"specifies the location of the accountd secrets")
-
 	logLevel := flag.Int("loglevel", 4,
 		"specifies the logging level, 4(INFO) is the default. Levels run from 0 (PANIC) to 6 (TRACE)")
-	port := flag.Int("port", 8080, "specifies this service's listenting port")
+	port := flag.Int("port", 8080, "specifies this service's listening port")
+	flag.Parse()
+
+	// Normally, info like this should NEVER come from the command line.
+	dbPort := flag.Int("dbport", 5432, "specifies the database's connection port")
+	dbHost := flag.String("dbhost", "34.83.219.202", "specifies the hostname or address of the database server")
+	dbUser := flag.String("dbuser", "todo", "DB user's login ID")
+	password := flag.String("passwd", "todo123", "DB user's password")
+	dbName := flag.String("dbname", "todo", "application's db name")
+
 	flag.Parse()
 
 	// 'logger' comes set with a default log level. This will be used if there's a problem
@@ -42,50 +49,43 @@ func main() {
 	//
 	// Setup DB connection
 	//
-	// connStr, err := getDBConnectionStr(configs, secrets)
-	// if err != nil {
-	// 	logger.WithFields(log.Fields{
-	// 		constants.ErrorCode:   constants.UnableToGetDBConnStrErrorCode,
-	// 		constants.ErrorDetail: err.Error(),
-	// 	}).Fatal(constants.UnableToGetDBConnStr)
-	// }
-
-	// db, err := sql.Open("mysql", connStr)
-	// if err != nil {
-	// 	logger.WithFields(log.Fields{
-	// 		constants.ErrorCode:   constants.UnableToOpenDBConnErrorCode,
-	// 		constants.ErrorDetail: err.Error(),
-	// 	}).Fatal(constants.UnableToOpenDBConn)
-	// }
-	// defer db.Close()
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", *dbHost, *dbPort, *dbUser, *password, *dbName)
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.UnableToOpenDBConnErrorCode,
+			constants.ErrorDetail: err.Error(),
+		}).Fatal(constants.UnableToOpenDBConn)
+	}
+	err = db.Ping()
+	if err != nil {
+		logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.UnableToOpenDBConnErrorCode,
+			constants.ErrorDetail: err.Error(),
+		}).Fatal(constants.UnableToOpenDBConn + ": ping error")
+	}
+	defer db.Close()
 
 	//
 	// Setup endpoints and start service
 	//
-	// usersHandler, err := users.NewUserHandler(db, logger)
-	// if err != nil {
-	// 	logger.WithFields(log.Fields{
-	// 		constants.ErrorCode:   constants.UnableToCreateHTTPHandlerErrorCode,
-	// 		constants.ErrorDetail: err.Error(),
-	// 	}).Fatal(constants.UnableToCreateHTTPHandler)
-	// }
-
-	// healthHandler := http.HandlerFunc(handlers.HealthFunc)
+	todoHandler, err := handlers.NewToDoHandler(db, logger)
+	if err != nil {
+		logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.UnableToCreateHTTPHandlerErrorCode,
+			constants.ErrorDetail: err.Error(),
+		}).Fatal(constants.UnableToCreateHTTPHandler)
+	}
 
 	mux := http.NewServeMux()
+	mux.Handle("/todos", todoHandler)  // Desired to prevent redirects. Can remove if redirects for '/todos/' are OK
+	mux.Handle("/todos/", todoHandler) // Required to properly route requests to '/todos/{id}.
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		logger.WithFields(log.Fields{
 			constants.ServiceName: "health",
 		}).Info("handling request")
 		w.Write([]byte("I'm healthy!\n"))
 	})
-
-	// port, ok := configs["port"]
-	// if !ok {
-	// 	logger.Info("port configuration unavailable (configs[port]), defaulting to 5000")
-	// 	port = "5000"
-	// }
-	// port = ":" + port
 
 	addr := ":" + strconv.Itoa(*port)
 	s := &http.Server{
@@ -108,10 +108,6 @@ func main() {
 
 	handleTermSignal(s, logger, 10)
 }
-
-//
-// Helper funcs
-//
 
 // handleTermSignal provides a mechanism to catch SIGTERMs and gracefully
 // shutdown the service.
