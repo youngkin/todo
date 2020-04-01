@@ -2,15 +2,51 @@
 
 # todoshaleapps
 
-Service for a simple ToDo application
+Service for a simple application that manages a To Do list
 
-# Database
+# API
 
-The database for the app is called `todo`. The table used to represent a todo item is named `todo` as well. The columns are as follows:
+## Representation
 
+A To Do item is represented in JSON as follows:
+
+``` 
+{
+    id: {int}
+    note: {string}
+    duedate: {string} // Time/date + timezone offset (e.g., +0 for GMT)
+    repeat: {bool} // Valid values are 'true' or 'false'
+    completed: {bool} // Valid values are 'true' or 'false'
+}
 ```
-'note' is the text of the To Do item (e.g., get groceries)
-'dueDate' is the date/time when the To Do item should be complete
-'repeat' indicates if the item will be repeated daily until due date
-'completed' indicates if the item has been completed , 'true' if it has, 'false' if not.
+
+Example:
+
+``` JSON
+{
+    id: 1,
+    note: "Get groceries",
+    duedate: "04-01-2020 12:00:00+0",
+    repeat: false,
+    completed: false,
+}
 ```
+
+## Resources
+
+|Verb   | Resource | Description  | Status  | Status Description |
+|:------|:---------|:-------------|--------:|:-------------------|
+|GET    |/todo     |Get all To Do items, do not include `id` in JSON body| 200|All To Do items returned |
+|GET    |/todo/{id}|Get the To Do item identified by {id}| 200|To Do item returned |
+|       |          |              | 404| To do item not found|
+|POST   |/todo     |Create a new To Do item| 201|To Do item successfully created|
+|PUT    |/todo/{id}|Update an existing To Do item identified by {id}, pass complete JSON in body|200|To Do item updated|
+|       |          |              | 404| To do item not found|
+
+## Common HTTP status codes
+
+|Status|Action|
+|-----:|:-----|
+|400|Bad request, don't retry|
+|429|Server busy, can retry after `Retry-After` time has expired (in seconds)|
+|500|Internal server error, can retry|
