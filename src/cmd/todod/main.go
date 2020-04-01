@@ -18,7 +18,7 @@ import (
 // TODO:
 //	1. 	Get Travis CI working in github
 //	2. 	Super simple, hello world, web service in google cloud platform and tested
-//	3.	Setup DB in GCP
+//	3.	Setup DB in GCP with tables and sample data
 //	4.	Get GET '/todo' and '/todo/{id}' endpoints, unit tests, and associated DB test data working
 //	5.	Finish PUT/POST/DELETE with tests
 //	6.	'curl' examples in README
