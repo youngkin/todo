@@ -26,5 +26,3 @@ spec:
             httpGet:
               path: /health
               port: http
----
- 
