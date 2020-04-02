@@ -94,6 +94,17 @@ In these alternate deployments the host IP address in the examples should be mod
 
    This will create the required tables as well as populate them with some sample data
 
+The application logs to `stdout`:
+
+```
+kt logs todod-84f9c7788-q9g9h
+{"Application":"ToDo","HostName":"todod-84f9c7788-q9g9h","LogLevel":"info","Port":":8080","level":"info","msg":"todod service starting","time":"2020-04-02T19:18:59Z"}
+{"Application":"ToDo","HostName":"todod-84f9c7788-q9g9h","ServiceName":"health","level":"info","msg":"handling request","time":"2020-04-02T19:19:00Z"}
+{"Application":"ToDo","HTTPMethod":"GET","HostName":"todod-84f9c7788-q9g9h","RemoteAddr":"10.8.0.1:53917","URLPath":"/todos","level":"info","msg":"HTTP request received","time":"2020-04-02T19:19:54Z"}
+{"Application":"ToDo","HTTPMethod":"POST","HostName":"todod-84f9c7788-q9g9h","RemoteAddr":"10.8.0.1:54051","URLPath":"/todos","level":"info","msg":"HTTP request received","time":"2020-04-02T19:20:44Z"}
+{"Application":"ToDo","HTTPMethod":"PUT","HostName":"todod-84f9c7788-q9g9h","RemoteAddr":"10.8.0.1:54219","URLPath":"/todos/6","level":"info","msg":"HTTP request received","time":"2020-04-02T19:23:10Z"}
+```
+
 ## Example `curl` commands
 
 * Get a To Do List
@@ -162,6 +173,15 @@ HTTP/1.1 200 OK
 Date: Thu, 02 Apr 2020 18:29:45 GMT
 Content-Length: 0
 
+```
+
+* Delete a To Do Item
+
+```
+curl -i -X DELETE http://35.227.143.9:80/todos/7
+HTTP/1.1 200 OK
+Date: Thu, 02 Apr 2020 20:48:50 GMT
+Content-Length: 0
 ```
 
 # Future Enhancements

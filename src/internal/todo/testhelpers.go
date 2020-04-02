@@ -199,50 +199,17 @@ func DBNoCallSetupHelper(t *testing.T, u Item) (*sql.DB, sqlmock.Sqlmock) {
 	return db, mock
 }
 
-// 	rows := sqlmock.NewRows([]string{//TODO add})
+// DBDeleteSetupHelper encapsulates the common code needed to setup a mock Item delete
+func DBDeleteSetupHelper(t *testing.T, td Item) (*sql.DB, sqlmock.Sqlmock) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
+	}
 
-// 	mock.ExpectQuery(TODO ADD).
-// 		WithArgs(1).WillReturnRows(rows)
+	mock.ExpectExec(deleteToDoStmt).WithArgs(td.ID)
 
-// 	expected := Item{ // TODO ADD}
-
-// 	return db, mock, &expected
-// }
-
-// // DBUserErrNoRowsSetupHelper encapsulates common coded needed to mock Queries returning no rows
-// func DBUserErrNoRowsSetupHelper(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *Item) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
-// 	}
-
-// 	mock.ExpectQuery(TODO ADD).
-// 		WithArgs(1).WillReturnError(sql.ErrNoRows)
-
-// 	return db, mock, nil
-// }
-
-// // DBUserOtherErrSetupHelper encapsulates common coded needed to mock Queries returning no rows
-// func DBUserOtherErrSetupHelper(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *Item) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
-// 	}
-
-// 	mock.ExpectQuery("SELECT accountID, id, name, email, role FROM todo").
-// 		WithArgs(1).WillReturnError(sql.ErrConnDone)
-
-// 	return db, mock, nil
-// }
-
-//
-//
-//
-//
-//
-//
-//
-//
+	return db, mock
+}
 
 func validateExpectedErrors(t *testing.T, err error, shouldPass bool) {
 	if shouldPass && err != nil {
@@ -253,18 +220,14 @@ func validateExpectedErrors(t *testing.T, err error, shouldPass bool) {
 	}
 }
 
-// // DBDeleteSetupHelper encapsulates the common code needed to setup a mock Item delete
-// func DBDeleteSetupHelper(t *testing.T, td Item) (*sql.DB, sqlmock.Sqlmock) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
-// 	}
-
-// 	mock.ExpectExec("DELETE FROM todo WHERE id = ?").WithArgs(td.ID).
-// 		WillReturnResult(sqlmock.NewResult(0, 1))
-
-// 	return db, mock
-// }
+//
+//
+//
+//
+//
+//
+//
+//
 
 // // DBDeleteErrorSetupHelper encapsulates the common code needed to mock a todo delete error
 // func DBDeleteErrorSetupHelper(t *testing.T, td Item) (*sql.DB, sqlmock.Sqlmock) {

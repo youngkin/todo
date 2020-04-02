@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: todod
-          image: ryoungkin/todod:0.1.6
+          image: ryoungkin/todod:0.1.7
           ports:
             - name: http
               containerPort: 8080

@@ -29,9 +29,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 		h.handlePut(w, r)
 	case http.MethodDelete:
-		fmt.Fprintf(w, "TODO - Implement!.")
-		w.WriteHeader(http.StatusNotImplemented)
-		// h.handleDelete(w, r)
+		h.handleDelete(w, r)
 	default:
 		fmt.Fprintf(w, "Sorry, only GET, PUT, POST, and DELETE methods are supported.")
 		w.WriteHeader(http.StatusNotImplemented)
