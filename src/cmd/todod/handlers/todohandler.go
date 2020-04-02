@@ -78,7 +78,7 @@ func (h handler) parseRqst(r *http.Request) (todo.Item, []string, error) {
 			constants.ErrorDetail: err.Error(),
 		}).Error(constants.JSONDecodingError)
 
-		return todo.Item{}, nil, err
+		return todo.Item{}, nil, errors.Annotate(err, "error occurred while unmarshaling request body")
 	}
 	if d.More() {
 		h.logger.WithFields(log.Fields{
@@ -97,7 +97,7 @@ func (h handler) parseRqst(r *http.Request) (todo.Item, []string, error) {
 			constants.ErrorDetail: err,
 		}).Error(constants.MalformedURL)
 
-		return todo.Item{}, nil, err
+		return todo.Item{}, nil, errors.Annotate(err, "error occurred while extracting URL path nodes")
 	}
 
 	return td, pathNodes, nil

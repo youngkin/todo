@@ -20,11 +20,6 @@ import (
 	"github.com/youngkin/todoshaleapps/src/internal/platform/constants"
 )
 
-// TODO:
-//	1. 	Update README
-//	4.	Finish PUT/DELETE with tests
-//	6.	'curl' examples in README
-
 func main() {
 	logLevel := flag.Int("loglevel", 4,
 		"specifies the logging level, 4(INFO) is the default. Levels run from 0 (PANIC) to 6 (TRACE)")
@@ -60,7 +55,7 @@ func main() {
 		logger.WithFields(log.Fields{
 			constants.ErrorCode:   constants.UnableToOpenDBConnErrorCode,
 			constants.ErrorDetail: err.Error(),
-		}).Fatal(constants.UnableToOpenDBConn + ": ping error")
+		}).Fatal(constants.UnableToOpenDBConn + ": database unreachable")
 	}
 	defer db.Close()
 

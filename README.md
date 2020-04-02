@@ -37,7 +37,7 @@ Example:
 
 |Verb   | Resource | Description  | Status  | Status Description |
 |:------|:---------|:-------------|--------:|:-------------------|
-|GET    |/health   |Health check, returns "I'm Healthy!" if all's OK| 200| Service healthy |
+|GET    |/health   |Health check, returns `I'm Healthy!` if all's OK| 200| Service healthy |
 |GET    |/todo     |Get all To Do items, do not include `id` in JSON body| 200|All To Do items returned |
 |GET    |/todo/{id}|Get the To Do item identified by {id}| 200|To Do item returned |
 |       |          |              | 404| To do item not found|
@@ -45,7 +45,7 @@ Example:
 |PUT    |/todo/{id}|Update an existing To Do item identified by {id}, pass complete JSON in body|200|To Do item updated|
 |       |          |              | 404| To do item not found|
 |DELETE |/todo/{id}|Deletes the referenced resource|200|To Do item was deleted|
-|       |          |                               |400|To Do item was not found|
+|       |          |                               |404|To Do item was not found|
 
 ## Common HTTP status codes
 
@@ -79,7 +79,7 @@ The application can also be run locally by:
 2. Start the `todod` service using this command line (again from `todoshaleapps/src/cmd/todod`):
 
 ``` bash
-./todod -dbport <postgres port number> -dbhost <postgres IP address> -dbuser <postgres user ID> -dbpassword <postgres user's password>
+./todod -dbport <postgres port number> -dbhost <postgres IP address> -dbuser <postgres user ID> -dbpassword <postgres user password>
 ```
    If the database name isn't configured to be `todo` as described below, an additional command line flag, `-dbname`, can be provided.
 
@@ -99,10 +99,18 @@ The application logs to `stdout`:
 ```
 kt logs todod-84f9c7788-q9g9h
 {"Application":"ToDo","HostName":"todod-84f9c7788-q9g9h","LogLevel":"info","Port":":8080","level":"info","msg":"todod service starting","time":"2020-04-02T19:18:59Z"}
+
 {"Application":"ToDo","HostName":"todod-84f9c7788-q9g9h","ServiceName":"health","level":"info","msg":"handling request","time":"2020-04-02T19:19:00Z"}
+
 {"Application":"ToDo","HTTPMethod":"GET","HostName":"todod-84f9c7788-q9g9h","RemoteAddr":"10.8.0.1:53917","URLPath":"/todos","level":"info","msg":"HTTP request received","time":"2020-04-02T19:19:54Z"}
+
 {"Application":"ToDo","HTTPMethod":"POST","HostName":"todod-84f9c7788-q9g9h","RemoteAddr":"10.8.0.1:54051","URLPath":"/todos","level":"info","msg":"HTTP request received","time":"2020-04-02T19:20:44Z"}
+
 {"Application":"ToDo","HTTPMethod":"PUT","HostName":"todod-84f9c7788-q9g9h","RemoteAddr":"10.8.0.1:54219","URLPath":"/todos/6","level":"info","msg":"HTTP request received","time":"2020-04-02T19:23:10Z"}
+
+{"Application":"ToDo","ErrorDetail":"resource ID in url (7) doesn't match resource ID in request body (6)","HTTPStatus":400,"HostName":"Richs-MacBook.local","URLPath":"/todos/7","level":"error","msg":"1000","time":"2020-04-02T14:43:40-06:00"}
+
+{"Application":"ToDo","HTTPMethod":"DELETE","HostName":"todod-7f47847987-fjlk2","RemoteAddr":"10.8.0.1:64925","URLPath":"/todos/7","level":"info","msg":"HTTP request received","time":"2020-04-02T20:48:50Z"}
 ```
 
 ## Example `curl` commands
@@ -144,12 +152,12 @@ curl http://35.227.143.9:80/todos | jq "."
 * Get a To Do Item
   
 ```
-curl http://35.227.143.9:80/todos/6 | jq "."
+curl http://35.227.143.9:80/todos/3 | jq "."
 {
-  "id": 6,
-  "selfref": "/todos/6",
-  "note": "work out",
-  "duedate": "2020-04-01T00:00:00Z",
+  "id": 3,
+  "selfref": "/todos/3",
+  "note": "walk dog",
+  "duedate": "2020-04-03T12:00:00Z",
   "repeat": true,
   "completed": false
 }
@@ -183,6 +191,10 @@ HTTP/1.1 200 OK
 Date: Thu, 02 Apr 2020 20:48:50 GMT
 Content-Length: 0
 ```
+
+# Things I would have liked to have had working
+
+I intended to write unit tests against a mocked SQL database using `go-sqlmock`. I have succesfully used this mocking framework in the past for just this type of thing. In those instances though I was using the MySQL DB driver. There is a slight difference in the structure of SQL statements between MySQL and Postgres as well as differences between what MySQL and Postgres return from `INSERT`s, `UPDATE`s and `DELETE`s. At this point I'm wondering if there's an issue with trying to mock Postgres. I intend to look into this a bit more, but for now there are only unit tests for `SELECT` DB requests.
 
 # Future Enhancements
 

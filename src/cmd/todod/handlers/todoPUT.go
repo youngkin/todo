@@ -19,14 +19,14 @@ func (h handler) handlePut(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(pathNodes) != 2 {
-		errMsg := fmt.Sprintf("expecting resource path like /todos/{id}, got %+v", pathNodes)
+		httpStatus := http.StatusBadRequest
 		h.logger.WithFields(log.Fields{
 			constants.ErrorCode:   constants.MalformedURLErrorCode,
-			constants.HTTPStatus:  http.StatusBadRequest,
+			constants.HTTPStatus:  httpStatus,
 			constants.Path:        r.URL.Path,
-			constants.ErrorDetail: errMsg,
+			constants.ErrorDetail: fmt.Sprintf("expecting resource path like /todos/{id}, got %+v", pathNodes),
 		}).Error(constants.MalformedURL)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(httpStatus)
 		return
 	}
 
@@ -56,6 +56,6 @@ func (h handler) handlePut(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(httpStatus)
 		return
 	}
-	// Not needed, http.ResponseWriter does this by default and will warn if present
-	// w.WriteHeader(http.StatusOK)
+
+	w.WriteHeader(http.StatusOK)
 }

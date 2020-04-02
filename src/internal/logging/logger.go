@@ -1,7 +1,3 @@
-// Copyright (c) 2020 Richard Youngkin. All rights reserved.
-// Use of this source code is governed by a MIT-style
-// license that can be found in the LICENSE file.
-
 package logging
 
 import (
@@ -20,7 +16,7 @@ func init() {
 	// Output to stdout instead of the default stderr
 	log.SetOutput(os.Stdout)
 
-	// Only log the DEBUG severity or above.
+	// Only log the INFO severity or above.
 	log.SetLevel(log.InfoLevel)
 	hostName, err := os.Hostname()
 	if err != nil {
@@ -33,7 +29,7 @@ func init() {
 
 }
 
-// GetLogger gets the common logger for the customer service
+// GetLogger gets the common logger
 func GetLogger() *log.Entry {
 	return logger
 }

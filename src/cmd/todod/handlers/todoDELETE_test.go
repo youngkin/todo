@@ -83,18 +83,12 @@ func TestDeleteToDo(t *testing.T) {
 
 			srvHandler, err := NewToDoHandler(db, logger)
 			if err != nil {
-				t.Fatalf("error '%s' was not expected when getting a customer handler", err)
+				t.Fatalf("error '%s' was not expected when getting a todo handler", err)
 			}
 
 			testSrv := httptest.NewServer(http.HandlerFunc(srvHandler.ServeHTTP))
 			defer testSrv.Close()
 
-			// NOTE: As there is no http.PUT creating an update request/PUT requires
-			//	1.	Creating an http.Client (done at the top of this function)
-			//	2.	Creating the request
-			//	3. 	Calling client.DO
-			//
-			// Kind of round-about, but it works
 			url := testSrv.URL + tc.url
 			req, err := http.NewRequest(http.MethodDelete, url, bytes.NewBuffer([]byte(tc.postData)))
 			if err != nil {
@@ -103,7 +97,7 @@ func TestDeleteToDo(t *testing.T) {
 
 			resp, err := client.Do(req)
 			if err != nil {
-				t.Fatalf("an error '%s' was not expected calling (client.Do()) accountd server", err)
+				t.Fatalf("an error '%s' was not expected calling (client.Do()) todod server", err)
 			}
 
 			status := resp.StatusCode

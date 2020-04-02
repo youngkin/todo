@@ -33,10 +33,10 @@ type List struct {
 }
 
 // GetToDoList will return all ToDo items
-func GetToDoList(db *sql.DB) (*List, error) {
+func GetToDoList(db *sql.DB) (List, error) {
 	results, err := db.Query(getAllToDosQuery)
 	if err != nil {
-		return &List{}, errors.Annotate(err, "error querying DB")
+		return List{}, errors.Annotate(err, "error querying DB")
 	}
 
 	tdl := List{}
@@ -49,13 +49,13 @@ func GetToDoList(db *sql.DB) (*List, error) {
 			&td.Repeat,
 			&td.Completed)
 		if err != nil {
-			return &List{}, errors.Annotate(err, "error scanning result set")
+			return List{}, errors.Annotate(err, "error scanning result set")
 		}
 
 		tdl.Items = append(tdl.Items, &td)
 	}
 
-	return &tdl, nil
+	return tdl, nil
 }
 
 // GetToDoItem will return the todo identified by 'id' or a nil todo if there

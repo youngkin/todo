@@ -32,7 +32,7 @@ func (h handler) handleDelete(w http.ResponseWriter, r *http.Request) {
 			constants.ErrorCode:   constants.MalformedURLErrorCode,
 			constants.HTTPStatus:  http.StatusBadRequest,
 			constants.Path:        r.URL.Path,
-			constants.ErrorDetail: fmt.Sprintf("expecting resource path like /users/{id}, got %+v", pathNodes),
+			constants.ErrorDetail: fmt.Sprintf("expecting resource path like /todos/{id}, got %+v", pathNodes),
 		}).Error(constants.MalformedURL)
 		w.WriteHeader(http.StatusBadRequest)
 		return

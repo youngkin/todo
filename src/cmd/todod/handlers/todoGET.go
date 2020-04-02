@@ -118,7 +118,7 @@ func (h handler) handleGetToDoList(path string) (item interface{}, errReason con
 		todo.SelfRef = "/" + path + "/" + strconv.Itoa(todo.ID)
 	}
 
-	return tds, constants.NoErrorCode, nil
+	return &tds, constants.NoErrorCode, nil
 }
 
 // handleGetToDoItem will return the todo referenced by the provided resource path,
@@ -142,7 +142,7 @@ func (h handler) handleGetToDoItem(path string, pathNodes []string) (item interf
 		return nil, constants.ToDoRqstErrorCode, err
 	}
 	if td == nil {
-		// client will deal with a nil (e.g., not found) todo
+		// caller will deal with a nil (e.g., not found) todo
 		return nil, constants.NoErrorCode, nil
 	}
 

@@ -15,7 +15,7 @@ const (
 	// DBDeleteError is an indication of a DB error during a DELETE operation
 	DBDeleteError = "a DB error occurred during a DELETE operation"
 	// DBInsertDuplicateToDoError indicates an attempt to insert a duplicate row
-	DBInsertDuplicateToDoError = "attempt to insert dupliecate todo"
+	DBInsertDuplicateToDoError = "attempt to insert duplicate todo"
 	// DBInvalidRequest indicates an invalid DB request, like attempting to update a non-existent todo
 	DBInvalidRequest = "attempted update on a non-existent todo"
 	// DBRowScanError indicates results from DB query could not be processed
