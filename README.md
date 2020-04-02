@@ -15,7 +15,7 @@ A To Do item is represented in JSON as follows:
     id: {int}            // Resource identifier, don't populate on POST
     selfref: {string}    // Resource URL, e.g., /todo/1. Returned on GET. Don't populate for POST/PUT
     note: {string}
-    duedate: {string}    // Time/date + timezone offset (e.g., +0 for GMT)
+    duedate: {string}    // Time/date 
     repeat: {bool}       // Valid values are 'true' or 'false'
     completed: {bool}    // Valid values are 'true' or 'false'
 }
@@ -27,7 +27,7 @@ Example:
 {
     id: 1,
     note: "Get groceries",
-    duedate: "04-01-2020 12:00:00+0",
+    duedate: "2020-04-01T00:00:00Z",
     repeat: false,
     completed: false,
 }
@@ -54,6 +54,8 @@ Example:
 |500|Internal server error, can retry|
 
 ## Examples
+
+* Get a To Do List
 
 ```
 curl http://35.227.143.9:80/todos | jq "."
@@ -85,6 +87,30 @@ curl http://35.227.143.9:80/todos | jq "."
     }
   ]
 }
+```
+
+* Get a To Do Item
+  
+```
+curl http://35.227.143.9:80/todos/6 | jq "."
+{
+  "id": 6,
+  "selfref": "/todos/6",
+  "note": "work out",
+  "duedate": "2020-04-01T00:00:00Z",
+  "repeat": true,
+  "completed": false
+}
+```
+
+* Create a new To Do Item
+
+```
+curl -i -X POST http://35.227.143.9:80/todos -H "Content-Type: application/json" -d "{\"note\":\"work out\",\"duedate\":\"2020-04-01T00:00:00Z\",\"repeat\":true,\"completed\":false}"
+HTTP/1.1 201 Created
+Location: /todos/6
+Date: Thu, 02 Apr 2020 02:49:08 GMT
+Content-Length: 0
 ```
 
 # Future Enhancements
