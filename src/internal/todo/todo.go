@@ -88,8 +88,6 @@ func InsertToDo(db *sql.DB, td Item) (int64, error) {
 	var id int64
 	err = db.QueryRow(insertToDoStmt, td.Note, td.DueDate, td.Repeat, td.Completed).Scan(&id)
 	if err != nil {
-		// TODO: REMOVE printf
-		fmt.Printf("error inserting todo %s into DB", err)
 		return 0, errors.Annotate(err, fmt.Sprintf("error inserting todo %+v into DB", td))
 	}
 
@@ -103,31 +101,10 @@ func UpdateToDo(db *sql.DB, td Item) (constants.ErrCode, error) {
 		return constants.DBUpSertErrorCode, errors.Annotate(err, "ToDo validation failure")
 	}
 
-	// TODO: This is needed for MySQL, is it really needed for Postgres?
-	tx, err := db.Begin()
-	if err != nil {
-		return constants.DBUpSertErrorCode, errors.Annotate(err, fmt.Sprintf("error beginning transaction for todo: %+v", td))
-	}
-	row := db.QueryRow(getToDoQuery, td.ID)
-	err = row.Scan(&td.ID,
-		&td.Note,
-		&td.DueDate,
-		&td.Repeat,
-		&td.Completed)
-	if err == nil {
-		return constants.DBInvalidRequestCode, errors.New(fmt.Sprintf("error, attempting to update non-existent todo, todo.ID %d", td.ID))
-	}
-	if err != nil && err != sql.ErrNoRows {
-		tx.Rollback()
-		return constants.DBUpSertErrorCode, errors.Annotate(err, fmt.Sprintf("error updating todo in the database: %+v", td))
-	}
-
 	_, err = db.Exec(updateToDoStmt, td.Note, td.DueDate, td.Repeat, td.Completed, td.ID)
 	if err != nil {
-		tx.Rollback()
 		return constants.DBUpSertErrorCode, errors.Annotate(err, fmt.Sprintf("error updating todo in the database: %+v", td))
 	}
-	tx.Commit()
 
 	return constants.NoErrorCode, nil
 }

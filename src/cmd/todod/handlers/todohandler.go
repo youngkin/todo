@@ -27,9 +27,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		h.handlePost(w, r)
 	case http.MethodPut:
-		fmt.Fprintf(w, "TODO - Implement!.")
-		w.WriteHeader(http.StatusNotImplemented)
-		//		h.handlePut(w, r)
+		h.handlePut(w, r)
 	case http.MethodDelete:
 		fmt.Fprintf(w, "TODO - Implement!.")
 		w.WriteHeader(http.StatusNotImplemented)
@@ -67,13 +65,13 @@ func (h handler) getURLPathNodes(path string) ([]string, error) {
 	return pathNodes, nil
 }
 
-func (h handler) parseRqst(r *http.Request) (todo.List, []string, error) {
+func (h handler) parseRqst(r *http.Request) (todo.Item, []string, error) {
 	//
 	// Get todo out of request body and validate
 	//
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields() // error if todo sends extra data
-	td := todo.List{}
+	td := todo.Item{}
 	err := d.Decode(&td)
 	if err != nil {
 		h.logger.WithFields(log.Fields{
@@ -82,7 +80,7 @@ func (h handler) parseRqst(r *http.Request) (todo.List, []string, error) {
 			constants.ErrorDetail: err.Error(),
 		}).Error(constants.JSONDecodingError)
 
-		return todo.List{}, nil, err
+		return todo.Item{}, nil, err
 	}
 	if d.More() {
 		h.logger.WithFields(log.Fields{
@@ -101,7 +99,7 @@ func (h handler) parseRqst(r *http.Request) (todo.List, []string, error) {
 			constants.ErrorDetail: err,
 		}).Error(constants.MalformedURL)
 
-		return todo.List{}, nil, err
+		return todo.Item{}, nil, err
 	}
 
 	return td, pathNodes, nil

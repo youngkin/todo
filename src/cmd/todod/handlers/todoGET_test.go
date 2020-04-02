@@ -58,32 +58,32 @@ func TestGetAllItems(t *testing.T) {
 			testName:           "testGetToDoListSuccess",
 			url:                "/todos",
 			shouldPass:         true,
-			setupFunc:          DBCallSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusOK,
 		},
 		{
 			testName:           "testToDoListSuccessTrailingSlash",
 			url:                "/todos/",
 			shouldPass:         true,
-			setupFunc:          DBCallSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusOK,
 		},
 		{
 			testName:           "testGetToDoListQueryFailure",
 			url:                "/todos",
 			shouldPass:         false,
-			setupFunc:          DBCallQueryErrorSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallQueryErrorSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusInternalServerError,
 		},
 		{
 			testName:           "testGetToDoListRowScanFailure",
 			url:                "/todos",
 			shouldPass:         false,
-			setupFunc:          DBCallRowScanErrorSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallRowScanErrorSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusInternalServerError,
 		},
 	}
@@ -135,7 +135,7 @@ func TestGetAllItems(t *testing.T) {
 			}
 
 			// we make sure that all post-conditions were met
-			DBCallTeardownHelper(t, mock)
+			tc.teardownFunc(t, mock)
 		})
 	}
 }
@@ -146,32 +146,32 @@ func TestGetUser(t *testing.T) {
 			testName:           "testGetItemSuccess",
 			url:                "/todos/1",
 			shouldPass:         true,
-			setupFunc:          GetItemSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.GetItemSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusOK,
 		},
 		{
 			testName:           "testGetItemURLTooLong",
 			url:                "/todos/1/extraNode",
 			shouldPass:         false,
-			setupFunc:          DBCallNoExpectationsSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallNoExpectationsSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusBadRequest,
 		},
 		{
 			testName:           "testGetItemURLNonNumericID",
 			url:                "/todos/notanumber",
 			shouldPass:         false,
-			setupFunc:          DBCallNoExpectationsSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallNoExpectationsSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusBadRequest,
 		},
 		{
 			testName:           "testGetItemErrNoRow",
 			url:                "/todos/notanumber",
 			shouldPass:         false,
-			setupFunc:          DBCallNoExpectationsSetupHelper,
-			teardownFunc:       DBCallTeardownHelper,
+			setupFunc:          todo.DBCallNoExpectationsSetupHelper,
+			teardownFunc:       todo.DBCallTeardownHelper,
 			expectedHTTPStatus: http.StatusBadRequest,
 		},
 	}
@@ -222,7 +222,7 @@ func TestGetUser(t *testing.T) {
 			}
 
 			// we make sure that all post-conditions were met
-			DBCallTeardownHelper(t, mock)
+			tc.teardownFunc(t, mock)
 		})
 	}
 }

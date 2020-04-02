@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/youngkin/todoshaleapps/src/internal/todo"
@@ -25,11 +26,7 @@ type TestCase struct {
 }
 
 func TestPOSTToDoItem(t *testing.T) {
-	// now := time.Now()
-	// nowJSON, err := now.MarshalJSON()
-	// if err != nil {
-	// 	t.Errorf("unexpected error %s", err)
-	// }
+	date := time.Date(2020, 4, 2, 13, 13, 0, 0, time.UTC)
 
 	tcs := []TestCase{
 		// {
@@ -38,51 +35,51 @@ func TestPOSTToDoItem(t *testing.T) {
 		// 	url:                "/todos",
 		// 	expectedHTTPStatus: http.StatusCreated,
 		// 	expectedResourceID: "/todos/1",
-		// 	postData:           fmt.Sprintf(`{"note": "walk the dog","duedate": %s,"repeat": true,"completed": false}`, nowJSON),
+		// 	postData:           `{"note": "walk the dog","duedate":"2020-04-02T13:13:13Z","repeat": true,"completed": false}`,
 		// 	todo: todo.Item{
 		// 		Note:      "walk the dog",
 		// 		DueDate:   now,
 		// 		Repeat:    true,
 		// 		Completed: false,
 		// 	},
-		// 	setupFunc:    DBInsertSetupHelper,
-		// 	teardownFunc: DBCallTeardownHelper,
+		// 	setupFunc:    todo.DBInsertSetupHelper,
+		// 	teardownFunc: todo.DBCallTeardownHelper,
 		// },
-		// {
-		// 	// On insert the URL must not include a resource ID
-		// 	testName:           "testInsertToDoItemFailInvalidURL",
-		// 	shouldPass:         false,
-		// 	url:                "/todos/1",
-		// 	expectedHTTPStatus: http.StatusBadRequest,
-		// 	expectedResourceID: "",
-		// 	postData:           fmt.Sprintf(`{"note": "walk the dog","duedate": %s,"repeat": true,"completed": false}`, nowJSON),
-		// 	todo: todo.Item{
-		// 		Note:      "walk the dog",
-		// 		DueDate:   now,
-		// 		Repeat:    true,
-		// 		Completed: false,
-		// 	},
-		// 	setupFunc:    DBNoCallSetupHelper,
-		// 	teardownFunc: DBCallTeardownHelper,
-		// },
-		// {
-		// 	// On insert the JSON body must not include todo ID
-		// 	testName:           "testInsertToDoItemFailInvalidJSON",
-		// 	shouldPass:         false,
-		// 	url:                "/todos",
-		// 	expectedHTTPStatus: http.StatusBadRequest,
-		// 	expectedResourceID: "",
-		// 	postData:           fmt.Sprintf(`{"id":1,"note": "walk the dog","duedate": %s,"repeat": true,"completed": false}`, nowJSON),
-		// 	todo: todo.Item{
-		//		ID:		   1,
-		// 		Note:      "walk the dog",
-		// 		DueDate:   now,
-		// 		Repeat:    true,
-		// 		Completed: false,
-		// 	},
-		// 	setupFunc:    tests.DBNoCallSetupHelper,
-		// 	teardownFunc: tests.DBCallTeardownHelper,
-		// },
+		{
+			// On insert the URL must not include a resource ID
+			testName:           "testInsertToDoItemFailInvalidURL",
+			shouldPass:         false,
+			url:                "/todos/1",
+			expectedHTTPStatus: http.StatusBadRequest,
+			expectedResourceID: "",
+			postData:           `{"note": "walk the dog","duedate":"2020-04-02T13:13:13Z","repeat": true,"completed": false}`,
+			todo: todo.Item{
+				Note:      "walk the dog",
+				DueDate:   date,
+				Repeat:    true,
+				Completed: false,
+			},
+			setupFunc:    todo.DBNoCallSetupHelper,
+			teardownFunc: todo.DBCallTeardownHelper,
+		},
+		{
+			// On insert the JSON body must not include todo ID
+			testName:           "testInsertToDoItemFailInvalidJSON",
+			shouldPass:         false,
+			url:                "/todos",
+			expectedHTTPStatus: http.StatusBadRequest,
+			expectedResourceID: "",
+			postData:           `{"id":1,"note": "walk the dog","duedate":"2020-04-02T13:13:13Z","repeat": true,"completed": false}`,
+			todo: todo.Item{
+				ID:        1,
+				Note:      "walk the dog",
+				DueDate:   date,
+				Repeat:    true,
+				Completed: false,
+			},
+			setupFunc:    todo.DBNoCallSetupHelper,
+			teardownFunc: todo.DBCallTeardownHelper,
+		},
 	}
 
 	for _, tc := range tcs {

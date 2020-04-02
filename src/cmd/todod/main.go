@@ -22,15 +22,13 @@ import (
 
 // TODO:
 //	1. 	Update README
-//	4.	Get GET '/todo' and '/todo/{id}' endpoints, unit tests, and associated DB test data working
-//	5.	Finish PUT/POST/DELETE with tests
+//	4.	Finish PUT/DELETE with tests
 //	6.	'curl' examples in README
 
 func main() {
 	logLevel := flag.Int("loglevel", 4,
 		"specifies the logging level, 4(INFO) is the default. Levels run from 0 (PANIC) to 6 (TRACE)")
 	port := flag.Int("port", 8080, "specifies this service's listening port")
-	flag.Parse()
 
 	// Normally, info like this should NEVER come from the command line.
 	dbPort := flag.Int("dbport", 5432, "specifies the database's connection port")

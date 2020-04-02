@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -15,44 +14,18 @@ func (h handler) handlePost(w http.ResponseWriter, r *http.Request) {
 	//
 	// Get todo out of request body and validate
 	//
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields() // error if todo has extra data
-	todo := todo.Item{}
-	err := d.Decode(&todo)
+	td, pathNodes, err := h.parseRqst(r)
 	if err != nil {
-		httpStatus := http.StatusBadRequest
-		h.logger.WithFields(log.Fields{
-			constants.ErrorCode:   constants.JSONDecodingErrorCode,
-			constants.HTTPStatus:  httpStatus,
-			constants.ErrorDetail: err.Error(),
-		}).Error(constants.JSONDecodingError)
-		w.WriteHeader(httpStatus)
-		return
-	}
-	if d.More() {
-		h.logger.WithFields(log.Fields{
-			constants.ErrorCode:   constants.JSONDecodingErrorCode,
-			constants.ErrorDetail: err.Error(),
-		}).Warn(constants.JSONDecodingError)
-	}
-
-	// Expecting t URL.Path '/todos'
-	pathNodes, err := h.getURLPathNodes(r.URL.Path)
-	if err != nil {
-		httpStatus := http.StatusBadRequest
-		h.logger.WithFields(log.Fields{
-			constants.ErrorCode:   constants.MalformedURLErrorCode,
-			constants.HTTPStatus:  httpStatus,
-			constants.Path:        r.URL.Path,
-			constants.ErrorDetail: err,
-		}).Error(constants.MalformedURL)
-		w.WriteHeader(httpStatus)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if todo.ID != 0 { // Item ID must *NOT* be populated (i.e., with a non-zero value) on an insert
+	// An expected request will not include Item.ID and the resulting unMarshaled Item.ID
+	// will take it's zero-value of 0. In Postres (and MySQL) the 'SERIAL' datatype's first
+	// value will be '1' so '0' is a valid indication of an unset Item.ID.
+	if td.ID != 0 {
 		httpStatus := http.StatusBadRequest
-		errMsg := fmt.Sprintf("expected Item.ID > 0, got Item.ID = %d", todo.ID)
+		errMsg := fmt.Sprintf("expected Item.ID > 0, got Item.ID = %d", td.ID)
 		h.logger.WithFields(log.Fields{
 			constants.ErrorCode:   constants.InvalidInsertErrorCode,
 			constants.HTTPStatus:  httpStatus,
@@ -76,7 +49,7 @@ func (h handler) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.insertToDo(todo)
+	id, err := h.insertToDo(td)
 	if err != nil {
 		httpStatus := http.StatusInternalServerError
 		h.logger.WithFields(log.Fields{
