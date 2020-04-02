@@ -6,6 +6,7 @@ package handlers
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -13,6 +14,15 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/youngkin/todoshaleapps/src/internal/todo"
 )
+
+// AnyTime is matcher for time.Time SQL statement arguments
+type AnyTime struct{}
+
+// Match satisfies sqlmock.Argument interface
+func (a *AnyTime) Match(v driver.Value) bool {
+	_, ok := v.(time.Time)
+	return ok
+}
 
 // DBCallSetupHelper encapsulates common code needed to setup mock DB access to todo data
 func DBCallSetupHelper(t *testing.T) (*sql.DB, sqlmock.Sqlmock, todo.List) {
@@ -128,6 +138,23 @@ func DBCallNoExpectationsSetupHelper(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *t
 	return db, mock, nil
 }
 
+// DBInsertSetupHelper encapsulates the common code needed to setup a mock To Do Item insert
+func DBInsertSetupHelper(t *testing.T, td todo.Item) (*sql.DB, sqlmock.Sqlmock) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"id"}).
+		AddRow(1)
+
+	mock.ExpectQuery("INSERT INTO todo (note, duedate, repeat, completed) VALUES ($1, $2, $3, $4) RETURNING id").
+		WithArgs(td.Note, AnyTime{}, td.Repeat, td.Completed).
+		WillReturnRows(rows)
+
+	return db, mock
+}
+
 // // DBNoCallSetupHelper encapsulates the common code needed to mock an error upstream from an actual DB call
 // func DBNoCallSetupHelper(t *testing.T, u todo.Item) (*sql.DB, sqlmock.Sqlmock) {
 // 	db, mock, err := sqlmock.New()
@@ -220,19 +247,6 @@ func validateExpectedErrors(t *testing.T, err error, shouldPass bool) {
 // 	}
 
 // 	mock.ExpectExec("DELETE FROM todo WHERE id = ?").WithArgs(u.ID).WillReturnError(sql.ErrConnDone)
-
-// 	return db, mock
-// }
-
-// // DBInsertSetupHelper encapsulates the common code needed to setup a mock Item insert
-// func DBInsertSetupHelper(t *testing.T, u todo.Item) (*sql.DB, sqlmock.Sqlmock) {
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
-// 	}
-
-// 	mock.ExpectExec("INSERT INTO todo").WithArgs(u.AccountID, u.Name, u.EMail, u.Role, u.Password).
-// 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 // 	return db, mock
 // }

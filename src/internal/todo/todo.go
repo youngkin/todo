@@ -12,7 +12,7 @@ import (
 var (
 	getAllToDosQuery = "SELECT id, note, duedate, repeat, completed FROM todo"
 	getToDoQuery     = "SELECT id, note, duedate, repeat, completed FROM todo WHERE id = $1"
-	insertToDoStmt   = "INSERT INTO todo (note, duedate, repeat, completed) VALUES ($1, $2, $3, $4)"
+	insertToDoStmt   = "INSERT INTO todo (note, duedate, repeat, completed) VALUES ($1, $2, $3, $4) RETURNING id"
 	updateToDoStmt   = "UPDATE todo SET note = $1, duedate = $2, repeat = $3, completed = $4 WHERE id = $5"
 	deleteToDoStmt   = "DELETE FROM todo WHERE id = $1"
 )
@@ -79,22 +79,21 @@ func GetToDoItem(db *sql.DB, id int) (*Item, error) {
 }
 
 // InsertToDo takes the provided todo data, inserts it into the db, and returns the newly created todo ID.
-func InsertToDo(db *sql.DB, td Item) (int64, constants.ErrCode, error) {
+func InsertToDo(db *sql.DB, td Item) (int64, error) {
 	err := validateToDo(td)
 	if err != nil {
-		return 0, constants.ToDoValidationErrorCode, errors.Annotate(err, "ToDo validation failure")
+		return 0, errors.Annotate(err, "ToDo validation failure")
 	}
 
-	r, err := db.Exec(insertToDoStmt, td.Note, td.DueDate, td.Repeat, td.Completed)
+	var id int64
+	err = db.QueryRow(insertToDoStmt, td.Note, td.DueDate, td.Repeat, td.Completed).Scan(&id)
 	if err != nil {
-		return 0, constants.DBUpSertErrorCode, errors.Annotate(err, fmt.Sprintf("error inserting todo %+v into DB", td))
-	}
-	id, err := r.LastInsertId()
-	if err != nil {
-		return 0, constants.DBUpSertErrorCode, errors.Annotate(err, "error getting todo ID")
+		// TODO: REMOVE printf
+		fmt.Printf("error inserting todo %s into DB", err)
+		return 0, errors.Annotate(err, fmt.Sprintf("error inserting todo %+v into DB", td))
 	}
 
-	return id, constants.NoErrorCode, nil
+	return id, nil
 }
 
 // UpdateToDo takes the provided todo data, inserts it into the db, and returns the newly created todo ID
@@ -104,9 +103,7 @@ func UpdateToDo(db *sql.DB, td Item) (constants.ErrCode, error) {
 		return constants.DBUpSertErrorCode, errors.Annotate(err, "ToDo validation failure")
 	}
 
-	// TODO: Confirm this statement
-	// This entire db.Begin/tx.Rollback/Commit seem awkward to me. But it's here because
-	// Postgres silently performs an insert if there is no row to update.
+	// TODO: This is needed for MySQL, is it really needed for Postgres?
 	tx, err := db.Begin()
 	if err != nil {
 		return constants.DBUpSertErrorCode, errors.Annotate(err, fmt.Sprintf("error beginning transaction for todo: %+v", td))

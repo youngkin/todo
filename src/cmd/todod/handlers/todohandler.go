@@ -25,9 +25,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		h.handleGet(w, r)
 	case http.MethodPost:
-		fmt.Fprintf(w, "TODO - Implement!.")
-		w.WriteHeader(http.StatusNotImplemented)
-		// h.handlePost(w, r)
+		h.handlePost(w, r)
 	case http.MethodPut:
 		fmt.Fprintf(w, "TODO - Implement!.")
 		w.WriteHeader(http.StatusNotImplemented)
