@@ -1,0 +1,33 @@
+echo "Create table"
+psql -h 34.83.219.202 -p 5432 -U todo --password todo -f sql/createtables.sql -a
+echo ""
+echo "Pre-populate table with test data"
+psql -h 34.83.219.202 -p 5432 -U todo --password todo -f sql/testdata.sql -a
+
+echo ""
+echo "Get To Do List"
+curl http://35.227.143.9:80/todos | jq "."
+echo ""
+echo "Get To Do item 3"
+curl http://35.227.143.9:80/todos/3 | jq "."
+echo ""
+echo "Add a To Do item for working out. Should get a 201 and the 'Location' header should have '/todos/4'"
+curl -i -X POST http://35.227.143.9:80/todos -H "Content-Type: application/json" -d "{\"note\":\"work out\",\"duedate\":\"2020-04-01T00:00:00Z\",\"repeat\":true,\"completed\":false}"
+echo ""
+echo "Get new To Do item"
+curl http://35.227.143.9:80/todos/4 | jq "."
+echo ""
+echo "Update To Do to 'workout extra hard'"
+curl -i -X PUT http://35.227.143.9:80/todos/4 -H "Content-Type: application/json" -d "{\"id\":4,\"note\":\"workout extra hard\",\"duedate\":\"2525-04-02T13:13:13Z\",\"repeat\":true,\"completed\":true}"
+echo ""
+echo "Look at the update"
+curl http://35.227.143.9:80/todos/4 | jq "."
+echo ""
+echo "Delete the newly added To Do item. Should get a 200."
+curl -i -X DELETE http://35.227.143.9:80/todos/4
+echo ""
+echo "Is the deleted item still there? Should get a 404"
+curl -i http://35.227.143.9:80/todos/4
+echo ""
+echo "Back to the original To Do List"
+curl http://35.227.143.9:80/todos | jq "."

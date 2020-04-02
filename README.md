@@ -69,7 +69,13 @@ This runs `go vet ./...`, `go fmt ./...`, `golint ./...`, and `go test -race ./.
 
 ## Running the application
 
-The host address in the example URLs references a deployment in Google Kubernetes Engine in my personal account. This can be used when the application isn't deployed elsewhere (e.g., locally or on another Kubernetes cluster).
+The host address in the ___Example 'curl' commands___ section below references a deployment in Google Kubernetes Engine (GKE) in my personal account. To run a quick smoke test on the deployed application in GKE do the following:
+
+1. Clone repository from GitHub
+2. Go to the `todoshaleapps` directory
+3. Execute `smoketest.sh`
+4. At the 2 password prompts at the beginning enter `todo123`
+5. Inspect the results
 
 It's possible to deploy the application to another Kubernetes cluster using the Kubernetes specs in `todoshaleapps/kubernetes`.
 
