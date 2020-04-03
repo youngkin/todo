@@ -189,6 +189,15 @@ Content-Length: 0
 
 ```
 
+* Create multiple (bulk) new To Do Items
+
+```
+curl -i -X POST http://localhost:8080/todos?bulk=true -H "Content-Type: application/json" -d "{\"todolist\": [{\"note\": \"get groceries\",\"duedate\": \"2020-04-01T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"pay bills\",\"duedate\": \"2020-04-02T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"walk dog\",\"duedate\": \"2020-04-03T12:00:00Z\",\"repeat\": true,\"completed\": false}]}"
+HTTP/1.1 200 OK
+Date: Fri, 03 Apr 2020 19:06:53 GMT
+Content-Length: 0
+```
+
 * Delete a To Do Item
 
 ```

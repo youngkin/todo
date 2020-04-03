@@ -71,8 +71,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/todos", todoHandler)  // Desired to prevent redirects. Can remove if redirects for '/todos/' are OK
-	mux.Handle("/todos/", todoHandler) // Required to properly route requests to '/todos/{id}.
+	mux.Handle("/todos", todoHandler) // Adding this route is necessary to support query parms like /todos?bulk=true
+	mux.Handle("/todos/", todoHandler)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		logger.WithFields(log.Fields{
 			constants.ServiceName: "health",
