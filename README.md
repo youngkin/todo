@@ -121,7 +121,7 @@ kt logs todod-84f9c7788-q9g9h
 
 ## Example `curl` commands
 
-* Get a To Do List
+### Get a To Do List
 
 ```
 curl http://35.227.143.9:80/todos | jq "."
@@ -155,7 +155,7 @@ curl http://35.227.143.9:80/todos | jq "."
 }
 ```
 
-* Get a To Do Item
+### Get a To Do Item
   
 ```
 curl http://35.227.143.9:80/todos/3 | jq "."
@@ -169,7 +169,7 @@ curl http://35.227.143.9:80/todos/3 | jq "."
 }
 ```
 
-* Create a new To Do Item
+### Create a new To Do Item
 
 ```
 curl -i -X POST http://35.227.143.9:80/todos -H "Content-Type: application/json" -d "{\"note\":\"work out\",\"duedate\":\"2020-04-01T00:00:00Z\",\"repeat\":true,\"completed\":false}"
@@ -179,7 +179,7 @@ Date: Thu, 02 Apr 2020 02:49:08 GMT
 Content-Length: 0
 ```
 
-* Update To Do Item
+### Update To Do Item
 
 ```
 curl -i -X PUT http://35.227.143.9:80/todos/4 -H "Content-Type: application/json" -d "{\"id\":4,\"note\":\"workout extra hard\",\"duedate\":\"2525-04-02T13:13:13Z\",\"repeat\":true,\"completed\":true}"
@@ -189,16 +189,53 @@ Content-Length: 0
 
 ```
 
-* Create multiple (bulk) new To Do Items
+### Create multiple (bulk) new To Do Items
 
 ```
-curl -i -X POST http://localhost:8080/todos?bulk=true -H "Content-Type: application/json" -d "{\"todolist\": [{\"note\": \"get groceries\",\"duedate\": \"2020-04-01T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"pay bills\",\"duedate\": \"2020-04-02T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"walk dog\",\"duedate\": \"2020-04-03T12:00:00Z\",\"repeat\": true,\"completed\": false}]}"
-HTTP/1.1 200 OK
-Date: Fri, 03 Apr 2020 19:06:53 GMT
-Content-Length: 0
+curl -X POST http://localhost:8080/todos?bulk=true -H "Content-Type: application/json" -d "{\"todolist\": [{\"note\": \"get groceries\",\"duedate\": \"2020-04-01T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"pay bills\",\"duedate\": \"2020-04-02T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"walk dog\",\"duedate\": \"2020-04-03T12:00:00Z\",\"repeat\": true,\"completed\": false}]}" | jq "."
+{
+  "responses": [
+    {
+      "item": {
+        "id": 8,
+        "selfref": "/todos/8",
+        "note": "pay bills",
+        "duedate": "2020-04-02T00:00:00Z",
+        "repeat": false,
+        "completed": false
+      },
+      "httpStatus": 201,
+      "error": null
+    },
+    {
+      "item": {
+        "id": 9,
+        "selfref": "/todos/9",
+        "note": "get groceries",
+        "duedate": "2020-04-01T00:00:00Z",
+        "repeat": false,
+        "completed": false
+      },
+      "httpStatus": 201,
+      "error": null
+    },
+    {
+      "item": {
+        "id": 10,
+        "selfref": "/todos/10",
+        "note": "walk dog",
+        "duedate": "2020-04-03T12:00:00Z",
+        "repeat": true,
+        "completed": false
+      },
+      "httpStatus": 201,
+      "error": null
+    }
+  ]
+}
 ```
 
-* Delete a To Do Item
+### Delete a To Do Item
 
 ```
 curl -i -X DELETE http://35.227.143.9:80/todos/7

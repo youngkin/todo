@@ -19,7 +19,7 @@ var (
 
 // Item represents the data about a To Do list item
 type Item struct {
-	ID        int       `json:"id"`
+	ID        int64     `json:"id"`
 	SelfRef   string    `json:"selfref"`
 	Note      string    `json:"note"`
 	DueDate   time.Time `json:"duedate"`

@@ -88,6 +88,8 @@ func main() {
 		WriteTimeout:      5 * time.Second,
 	}
 
+	go handlers.PostRequestLauncher(todoHandler, handlers.ToDoPostDoneChan, handlers.InsertToDoRqstChan, logger)
+
 	go func() {
 		logger.WithFields(log.Fields{
 			constants.Port:     addr,
@@ -95,6 +97,7 @@ func main() {
 		}).Info("todod service starting")
 
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
+			close(handlers.ToDoPostDoneChan)
 			logger.Fatal(err)
 		}
 	}()
@@ -110,6 +113,7 @@ func handleTermSignal(s *http.Server, logger *log.Entry, timeout int) {
 
 	<-sigs
 
+	close(handlers.ToDoPostDoneChan)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
@@ -120,5 +124,4 @@ func handleTermSignal(s *http.Server, logger *log.Entry, timeout int) {
 	} else {
 		logger.Info("Server stopped")
 	}
-
 }

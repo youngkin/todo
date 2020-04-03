@@ -19,6 +19,8 @@ type handler struct {
 	logger *log.Entry
 }
 
+const nilToDoID = 0
+
 // ServeHTTP handles the request
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logRqstRcvd(r, h.logger)
@@ -154,8 +156,8 @@ func (h handler) handleGetToDoList(path string) (item interface{}, errReason con
 
 	h.logger.Debugf("handleGetToDoList() results: %+v", tds)
 
-	for _, todo := range tds.Items {
-		todo.SelfRef = "/" + path + "/" + strconv.Itoa(todo.ID)
+	for _, td := range tds.Items {
+		td.SelfRef = "/" + path + "/" + strconv.FormatInt(td.ID, 10)
 	}
 
 	return &tds, constants.NoErrorCode, nil
@@ -188,7 +190,7 @@ func (h handler) handleGetToDoItem(path string, pathNodes []string) (item interf
 
 	h.logger.Debugf("GetToDoItem() results: %+v", td)
 
-	td.SelfRef = "/" + path + "/" + strconv.Itoa(td.ID)
+	td.SelfRef = "/" + path + "/" + strconv.FormatInt(td.ID, 10)
 
 	return td, 0, nil
 }
@@ -196,8 +198,8 @@ func (h handler) handleGetToDoItem(path string, pathNodes []string) (item interf
 func (h handler) handlePost(w http.ResponseWriter, r *http.Request, td todo.Item, pathNodes []string) {
 	// An expected request will not include Item.ID and the resulting unMarshaled Item.ID
 	// will take it's zero-value of 0. In Postres (and MySQL) the 'SERIAL' datatype's first
-	// value will be '1' so '0' is a valid indication of an unset Item.ID.
-	if td.ID != 0 {
+	// value will be '1' so '0', or 'nilToDoID', is a valid indication of an unset Item.ID.
+	if td.ID != nilToDoID {
 		httpStatus := http.StatusBadRequest
 		errMsg := fmt.Sprintf("expected Item.ID > 0, got Item.ID = %d", td.ID)
 		h.logger.WithFields(log.Fields{
@@ -247,10 +249,129 @@ func (h handler) handleBulkPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	numRqsts := 0
 	for _, td := range tdl.Items {
 		td := td
-		go h.handlePost(w, r, *td, pathNodes)
+		rqst := insertTodoRequest{
+			r:         r,
+			td:        *td,
+			pathNodes: pathNodes,
+			respChan:  insertToDoRespChan,
+		}
+		InsertToDoRqstChan <- rqst
+		numRqsts++
 	}
+
+	h.logger.WithFields(log.Fields{
+		constants.Method: http.MethodPost,
+	}).Debugf("handleBulkPost, launched %d insert requests", numRqsts)
+
+	var responses = []insertTodoResponse{}
+	for i := 0; i < numRqsts; i++ {
+		resp := <-insertToDoRespChan
+		h.logger.WithFields(log.Fields{
+			constants.Method:        http.MethodPost,
+			constants.MessageDetail: fmt.Sprintf("Response: %+v", resp),
+		}).Debugf("handleBulkPost received response")
+
+		if resp.HTTPStatus == http.StatusCreated {
+			resp.Item.SelfRef = "/" + pathNodes[0] + "/" + strconv.FormatInt(resp.Item.ID, 10)
+		}
+
+		responses = append(responses, resp)
+	}
+
+	respOut := insertTodoResponses{
+		Responses: responses,
+	}
+
+	marshResp, err := json.Marshal(respOut)
+	if err != nil {
+		httpStatus := http.StatusInternalServerError
+		h.logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.JSONMarshalingErrorCode,
+			constants.HTTPStatus:  httpStatus,
+			constants.ErrorDetail: err.Error(),
+		}).Error(constants.JSONMarshalingError)
+		w.WriteHeader(httpStatus)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(marshResp)
+}
+
+func (h handler) handlePostItem(r *http.Request, td todo.Item, pathNodes []string, respChan chan insertTodoResponse) {
+	h.logger.WithFields(log.Fields{
+		constants.Method:        http.MethodPost,
+		constants.MessageDetail: fmt.Sprintf("Item: %+v", td),
+	}).Debugf("handlePostItem entry")
+	// An expected request will not include Item.ID and the resulting unMarshaled Item.ID
+	// will take it's zero-value of 0. In Postres (and MySQL) the 'SERIAL' datatype's first
+	// value will be '1' so '0', or 'nilToDoID', is a valid indication of an unset Item.ID.
+	if td.ID != nilToDoID {
+		httpStatus := http.StatusBadRequest
+		errMsg := fmt.Sprintf("expected Item.ID > 0, got Item.ID = %d", td.ID)
+		h.logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.InvalidInsertErrorCode,
+			constants.HTTPStatus:  httpStatus,
+			constants.Path:        r.URL.Path,
+			constants.ErrorDetail: errMsg,
+		}).Error(constants.InvalidInsertError)
+		resp := insertTodoResponse{
+			Item:       td,
+			HTTPStatus: httpStatus,
+			Err:        errors.Errorf(errMsg),
+		}
+		respChan <- resp
+	}
+
+	if len(pathNodes) != 1 {
+		httpStatus := http.StatusBadRequest
+		errMsg := fmt.Sprintf("expected '/todos', got %s", pathNodes)
+		h.logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.MalformedURLErrorCode,
+			constants.HTTPStatus:  httpStatus,
+			constants.Path:        r.URL.Path,
+			constants.ErrorDetail: errMsg,
+		}).Error(constants.MalformedURL)
+		resp := insertTodoResponse{
+			Item:       td,
+			HTTPStatus: httpStatus,
+			Err:        errors.Errorf(errMsg),
+		}
+		respChan <- resp
+	}
+
+	id, err := h.insertToDo(td)
+	if err != nil {
+		httpStatus := http.StatusInternalServerError
+		h.logger.WithFields(log.Fields{
+			constants.ErrorCode:   constants.DBUpSertErrorCode,
+			constants.HTTPStatus:  httpStatus,
+			constants.Path:        r.URL.Path,
+			constants.ErrorDetail: err,
+		}).Error(constants.DBUpSertError)
+		resp := insertTodoResponse{
+			Item:       td,
+			HTTPStatus: httpStatus,
+			Err:        errors.Annotate(err, "call to insertToDo() failed"),
+		}
+		respChan <- resp
+	}
+
+	td.ID = id
+	resp := insertTodoResponse{
+		Item:       td,
+		HTTPStatus: http.StatusCreated,
+		Err:        nil,
+	}
+	respChan <- resp
+	h.logger.WithFields(log.Fields{
+		constants.Method:        http.MethodPost,
+		constants.MessageDetail: fmt.Sprintf("Response: %+v", resp),
+	}).Debugf("handlePostItem exit")
 }
 
 func (h handler) insertToDo(u todo.Item) (int64, error) {
@@ -281,7 +402,7 @@ func (h handler) handlePut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if pathNodes[1] != strconv.Itoa(td.ID) {
+	if pathNodes[1] != strconv.FormatInt(td.ID, 10) {
 		httpStatus := http.StatusBadRequest
 		h.logger.WithFields(log.Fields{
 			constants.HTTPStatus:  httpStatus,
@@ -476,4 +597,56 @@ func NewToDoHandler(db *sql.DB, logger *log.Entry) (http.Handler, error) {
 	}
 
 	return handler{db: db, logger: logger}, nil
+}
+
+type insertTodoResponse struct {
+	Item       todo.Item `json:"item"`
+	HTTPStatus int       `json:"httpStatus"`
+	Err        error     `json:"error"`
+}
+
+type insertTodoResponses struct {
+	Responses []insertTodoResponse `json:"responses"`
+}
+
+type insertTodoRequest struct {
+	r         *http.Request
+	td        todo.Item
+	pathNodes []string
+	respChan  chan insertTodoResponse
+}
+
+var (
+	maxSimToDoInserts = 10
+	// ToDoPostDoneChan is used during shutdown to stop daemon goroutines gracefully
+	ToDoPostDoneChan = make(chan interface{})
+	// InsertToDoRqstChan is to send insert To Do Item requests for processing
+	InsertToDoRqstChan = make(chan insertTodoRequest, maxSimToDoInserts)
+	insertToDoRespChan = make(chan insertTodoResponse)
+)
+
+// PostRequestLauncher listens on its 'rqstChan' for insert To Do Item requests and
+// will launch each request into a goroutine for processing. It monitors its 'done'
+// channel to detect when it should exit.
+func PostRequestLauncher(h interface{}, done chan interface{}, rqstChan chan insertTodoRequest, logger *log.Entry) {
+	var hndlr handler
+
+	switch h.(type) {
+	case handler:
+		hndlr = h.(handler)
+	default:
+		logger.Fatalf("PostRequestLauncher provided an 'h' parameter that is not of type 'handler'")
+	}
+	logger.Info("PostRequestLauncher starting...")
+	for {
+		select {
+		case rqst := <-rqstChan:
+			go hndlr.handlePostItem(rqst.r, rqst.td, rqst.pathNodes, rqst.respChan)
+		case <-done:
+			logger.Info("PostRequestLauncher exiting...")
+			return
+		default:
+			continue
+		}
+	}
 }
