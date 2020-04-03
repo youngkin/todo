@@ -77,7 +77,7 @@ The host address in the ___Example 'curl' commands___ section below references a
 4. At the 2 password prompts at the beginning enter `todo123`
 5. Inspect the results
 
-It's possible to deploy the application to another Kubernetes cluster using the Kubernetes specs in `todoshaleapps/kubernetes`.
+It's possible to deploy the application to another Kubernetes cluster using the Kubernetes specs in `todoshaleapps/kubernetes`. NOTE: the `svcTodod.yaml` and `svcPostgres.yaml` files should only be used for non-GKE deployments. In GKE create load balancer services (e.g., via the GCP/GKE web console).
 
 The application can also be run locally by:
 
