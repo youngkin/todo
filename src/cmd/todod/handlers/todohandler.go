@@ -20,19 +20,28 @@ type handler struct {
 
 // ServeHTTP handles the request
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logRqstRcvd(r)
 	switch r.Method {
 	case http.MethodGet:
+		h.logRqstRcvd(r)
 		h.handleGet(w, r)
 	case http.MethodPost:
+		h.logRqstRcvd(r)
 		h.handlePost(w, r)
 	case http.MethodPut:
+		h.logRqstRcvd(r)
 		h.handlePut(w, r)
 	case http.MethodDelete:
+		h.logRqstRcvd(r)
 		h.handleDelete(w, r)
 	default:
-		fmt.Fprintf(w, "Sorry, only GET, PUT, POST, and DELETE methods are supported.")
-		w.WriteHeader(http.StatusNotImplemented)
+		httpStatus := http.StatusNotImplemented
+		h.logger.WithFields(log.Fields{
+			constants.Method:     r.Method,
+			constants.Path:       r.URL.Path,
+			constants.HTTPStatus: httpStatus,
+			constants.RemoteAddr: r.RemoteAddr,
+		}).Warn("Expected GET, POST, PUT, or DELETE")
+		w.WriteHeader(httpStatus)
 	}
 
 }
