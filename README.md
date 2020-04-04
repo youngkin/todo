@@ -192,7 +192,7 @@ Content-Length: 0
 ### Create multiple (bulk) new To Do Items
 
 ```
-curl -X POST http://localhost:8080/todos?bulk=true -H "Content-Type: application/json" -d "{\"todolist\": [{\"note\": \"get groceries\",\"duedate\": \"2020-04-01T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"pay bills\",\"duedate\": \"2020-04-02T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"walk dog\",\"duedate\": \"2020-04-03T12:00:00Z\",\"repeat\": true,\"completed\": false}]}" | jq "."
+curl -X POST http://35.227.143.9:80/todos?bulk=true -H "Content-Type: application/json" -d "{\"todolist\": [{\"note\": \"get groceries\",\"duedate\": \"2020-04-01T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"pay bills\",\"duedate\": \"2020-04-02T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"walk dog\",\"duedate\": \"2020-04-03T12:00:00Z\",\"repeat\": true,\"completed\": false}]}" | jq "."
 {
   "responses": [
     {

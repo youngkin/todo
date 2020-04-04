@@ -23,33 +23,44 @@ const nilToDoID = 0
 
 // ServeHTTP handles the request
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	logRqstRcvd(r, h.logger)
 	bulk := r.URL.Query().Get("bulk")
 	switch r.Method {
 	case http.MethodGet:
+		logRqstRcvd(r, h.logger)
 		h.handleGet(w, r)
 	case http.MethodPost:
 		if len(bulk) > 0 {
+			h.logger.WithFields(log.Fields{
+				constants.Method:     r.Method,
+				constants.Path:       r.URL.Path,
+				constants.RemoteAddr: r.RemoteAddr,
+			}).Info("HTTP bulk request received")
 			h.handleBulkPost(w, r)
 			return
 		}
-		//
-		// Get todo out of request body and validate
-		//
+
+		logRqstRcvd(r, h.logger)
 		td, pathNodes, err := parseRqst(r, h.logger)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
 		h.handlePost(w, r, td, pathNodes)
 	case http.MethodPut:
+		logRqstRcvd(r, h.logger)
 		h.handlePut(w, r)
 	case http.MethodDelete:
+		logRqstRcvd(r, h.logger)
 		h.handleDelete(w, r)
 	default:
-		fmt.Fprintf(w, "Sorry, only GET, PUT, POST, and DELETE methods are supported.")
-		w.WriteHeader(http.StatusNotImplemented)
+		httpStatus := http.StatusNotImplemented
+		h.logger.WithFields(log.Fields{
+			constants.Method:     r.Method,
+			constants.Path:       r.URL.Path,
+			constants.HTTPStatus: httpStatus,
+			constants.RemoteAddr: r.RemoteAddr,
+		}).Warn("Expected GET, POST, PUT, or DELETE")
+		w.WriteHeader(httpStatus)
 	}
 
 }
@@ -124,6 +135,7 @@ func (h handler) handleGet(w http.ResponseWriter, r *http.Request) {
 		httpStatus = http.StatusNotFound
 		h.logger.WithFields(log.Fields{
 			constants.HTTPStatus: httpStatus,
+			constants.Path:       r.URL.Path,
 		}).Error("ToDo not found")
 		w.WriteHeader(httpStatus)
 		return
