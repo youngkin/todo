@@ -250,8 +250,10 @@ func (h handler) handlePost(w http.ResponseWriter, r *http.Request, td todo.Item
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	// NOTE: Go is persnickity about the order of these next 2 statements.
+	// If 'w.Header' doesn't come first the 'Location' header isn't written.
 	w.Header().Add("Location", fmt.Sprintf("/todos/%d", id))
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (h handler) handleBulkPost(w http.ResponseWriter, r *http.Request) {
@@ -278,6 +280,7 @@ func (h handler) handleBulkPost(w http.ResponseWriter, r *http.Request) {
 		constants.Method: http.MethodPost,
 	}).Debugf("handleBulkPost, launched %d insert requests", numRqsts)
 
+	httpOverallStatus := http.StatusCreated
 	var responses = []insertTodoResponse{}
 	for i := 0; i < numRqsts; i++ {
 		resp := <-insertToDoRespChan
@@ -288,6 +291,10 @@ func (h handler) handleBulkPost(w http.ResponseWriter, r *http.Request) {
 
 		if resp.HTTPStatus == http.StatusCreated {
 			resp.Item.SelfRef = "/" + pathNodes[0] + "/" + strconv.FormatInt(resp.Item.ID, 10)
+		} else {
+			// Indicates that part of the request failed, body contains more detail regarding
+			// the actual error. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+			httpOverallStatus = http.StatusConflict
 		}
 
 		responses = append(responses, resp)
@@ -309,7 +316,7 @@ func (h handler) handleBulkPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(httpOverallStatus)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(marshResp)
 }
@@ -324,7 +331,7 @@ func (h handler) handlePostItem(r *http.Request, td todo.Item, pathNodes []strin
 	// value will be '1' so '0', or 'nilToDoID', is a valid indication of an unset Item.ID.
 	if td.ID != nilToDoID {
 		httpStatus := http.StatusBadRequest
-		errMsg := fmt.Sprintf("expected Item.ID > 0, got Item.ID = %d", td.ID)
+		errMsg := fmt.Sprintf("expected unpopulated To Do item ID, got Item ID = %d", td.ID)
 		h.logger.WithFields(log.Fields{
 			constants.ErrorCode:   constants.InvalidInsertErrorCode,
 			constants.HTTPStatus:  httpStatus,
@@ -334,7 +341,7 @@ func (h handler) handlePostItem(r *http.Request, td todo.Item, pathNodes []strin
 		resp := insertTodoResponse{
 			Item:       td,
 			HTTPStatus: httpStatus,
-			Err:        errors.Errorf(errMsg),
+			Err:        errMsg,
 		}
 		respChan <- resp
 	}
@@ -351,7 +358,7 @@ func (h handler) handlePostItem(r *http.Request, td todo.Item, pathNodes []strin
 		resp := insertTodoResponse{
 			Item:       td,
 			HTTPStatus: httpStatus,
-			Err:        errors.Errorf(errMsg),
+			Err:        errMsg,
 		}
 		respChan <- resp
 	}
@@ -368,7 +375,7 @@ func (h handler) handlePostItem(r *http.Request, td todo.Item, pathNodes []strin
 		resp := insertTodoResponse{
 			Item:       td,
 			HTTPStatus: httpStatus,
-			Err:        errors.Annotate(err, "call to insertToDo() failed"),
+			Err:        fmt.Sprintf("call to insertToDo() failed, error: %s", err),
 		}
 		respChan <- resp
 	}
@@ -377,7 +384,7 @@ func (h handler) handlePostItem(r *http.Request, td todo.Item, pathNodes []strin
 	resp := insertTodoResponse{
 		Item:       td,
 		HTTPStatus: http.StatusCreated,
-		Err:        nil,
+		Err:        "",
 	}
 	respChan <- resp
 	h.logger.WithFields(log.Fields{
@@ -614,7 +621,7 @@ func NewToDoHandler(db *sql.DB, logger *log.Entry) (http.Handler, error) {
 type insertTodoResponse struct {
 	Item       todo.Item `json:"item"`
 	HTTPStatus int       `json:"httpStatus"`
-	Err        error     `json:"error"`
+	Err        string    `json:"error"`
 }
 
 type insertTodoResponses struct {
