@@ -95,7 +95,7 @@ func TestGetAllItems(t *testing.T) {
 
 			// populate Item.SelfRef from Item.ID
 			for _, todo := range expected.Items {
-				todo.SelfRef = "/todos/" + strconv.Itoa(todo.ID)
+				todo.SelfRef = "/todos/" + strconv.FormatInt(todo.ID, 10)
 			}
 
 			todoHandler, err := NewToDoHandler(db, logger)
@@ -140,7 +140,7 @@ func TestGetAllItems(t *testing.T) {
 	}
 }
 
-func TestGetUser(t *testing.T) {
+func TestGetOneItem(t *testing.T) {
 	tcs := []ItemTest{
 		{
 			testName:           "testGetItemSuccess",

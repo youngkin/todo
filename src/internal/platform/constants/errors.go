@@ -26,8 +26,8 @@ const (
 	// HTTPWriteError indicates that there was a problem writing an HTTP response body
 	HTTPWriteError = "Error writing HTTP response body"
 
-	// InvalidInsertError indicates that an unexpected ToDo.ID was detected in an insert request
-	InvalidInsertError = "Unexpected ToDo.ID in insert request"
+	// InvalidInsertError indicates that an unexpected Item.ID was detected in an insert request
+	InvalidInsertError = "Unexpected Item.ID in insert request"
 
 	// JSONDecodingError indicates that there was a problem decoding JSON input
 	JSONDecodingError = "JSON Decoding Error"
@@ -63,10 +63,10 @@ const (
 	// Todo related error codes start at 1000 and go to 1999
 	//
 
-	// ToDoRqstError indicates that GET(or PUT) /todo or GET(or PUT) /todo/{id} failed in some way
-	ToDoRqstError = "GET /todo or GET /todo/{id} failed"
-	// ToDoTypeConversionError indicates that the payload returned from GET /todo/{id} could
-	// not be converted to either a ToDo (/todo) or ToDo (/todo/{id}) type
+	// ToDoRqstError indicates that GET(or PUT) /todos or GET(or PUT) /todos/{id} failed in some way
+	ToDoRqstError = "GET /todos or GET /todos/{id} failed"
+	// ToDoTypeConversionError indicates that the payload returned from GET /todos/{id} could
+	// not be converted to either a ToDo (/todos) or ToDo (/todos/{id}) type
 	ToDoTypeConversionError = "Unable to convert payload to ToDo(s) type"
 	// ToDoValidationError indicates a problem with the ToDo data
 	ToDoValidationError = "invalid todo data"

@@ -71,8 +71,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/todos", todoHandler)  // Desired to prevent redirects. Can remove if redirects for '/todos/' are OK
-	mux.Handle("/todos/", todoHandler) // Required to properly route requests to '/todos/{id}.
+	mux.Handle("/todos", todoHandler) // Adding this route is necessary to support query parms like /todos?bulk=true
+	mux.Handle("/todos/", todoHandler)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		logger.WithFields(log.Fields{
 			constants.ServiceName: "health",
@@ -88,6 +88,8 @@ func main() {
 		WriteTimeout:      5 * time.Second,
 	}
 
+	go handlers.PostRequestLauncher(todoHandler, handlers.ToDoPostDoneChan, handlers.InsertToDoRqstChan, logger)
+
 	go func() {
 		logger.WithFields(log.Fields{
 			constants.Port:     addr,
@@ -95,6 +97,7 @@ func main() {
 		}).Info("todod service starting")
 
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
+			close(handlers.ToDoPostDoneChan)
 			logger.Fatal(err)
 		}
 	}()
@@ -110,6 +113,7 @@ func handleTermSignal(s *http.Server, logger *log.Entry, timeout int) {
 
 	<-sigs
 
+	close(handlers.ToDoPostDoneChan)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
@@ -120,5 +124,4 @@ func handleTermSignal(s *http.Server, logger *log.Entry, timeout int) {
 	} else {
 		logger.Info("Server stopped")
 	}
-
 }

@@ -33,17 +33,61 @@ Example:
 }
 ```
 
+The To Do list JSON representation is:
+
+``` 
+{
+  "todolist": [
+      {
+        id: {int}            // Resource identifier, don't populate on POST
+        selfref: {string}    // Resource URL, e.g., /todo/1. Returned on GET. Don't populate for POST/PUT
+        note: {string}
+        duedate: {string}    // Time/date 
+        repeat: {bool}       // Valid values are 'true' or 'false'
+        completed: {bool}    // Valid values are 'true' or 'false'
+      },...
+  ]
+}
+```
+
+Example:
+
+```
+{
+  "todolist": [
+    {
+      "id": 1,
+      "selfref": "/todos/1",
+      "note": "get groceries",
+      "duedate": "2020-04-01T00:00:00Z",
+      "repeat": false,
+      "completed": false
+    },
+    {
+      "id": 2,
+      "selfref": "/todos/2",
+      "note": "pay bills",
+      "duedate": "2020-04-02T00:00:00Z",
+      "repeat": false,
+      "completed": false
+    },...
+  ]
+}
+```
+
 ## Resources
 
 |Verb   | Resource | Description  | Status  | Status Description |
 |:------|:---------|:-------------|--------:|:-------------------|
-|GET    |/health   |Health check, returns `I'm Healthy!` if all's OK| 200| Service healthy |
+|GET    |/health   |Health check, returns `I'm Healthy!` if all's OK     | 200| Service healthy |
 |GET    |/todo     |Get all To Do items, do not include `id` in JSON body| 200|All To Do items returned |
 |GET    |/todo/{id}|Get the To Do item identified by {id}| 200|To Do item returned |
-|       |          |              | 404| To do item not found|
-|POST   |/todo     |Create a new To Do item, do not include `id` in JSON body| 201|To Do item successfully created|
+|       |          |                                     | 404| To do item not found|
+|POST   |/todo     |Create a new To Do item, do not include `id` in JSON body              |201|To Do item successfully created|
+|       |/todo?bulk=true|Create multiple To Do items in a bulk request, do not include `id`|201|All To Do items successfully created|
+|       |/todo?bulk=true|                                                                  |409| One or more of the sub-requests failed|
 |PUT    |/todo/{id}|Update an existing To Do item identified by {id}, pass complete JSON in body|200|To Do item updated|
-|       |          |              | 404| To do item not found|
+|       |          |                                                                            |404| To do item not found|
 |DELETE |/todo/{id}|Deletes the referenced resource|200|To Do item was deleted|
 |       |          |                               |404|To Do item was not found|
 
@@ -53,7 +97,7 @@ Example:
 |-----:|:-----|
 |400|Bad request, don't retry|
 |429|Server busy, can retry after `Retry-After` time has expired (in seconds)|
-|500|Internal server error, can retry|
+|500|Internal server error, can retry, subsequent request _might_ succeed|
 
 # Runnning and testing the application
 
@@ -73,9 +117,23 @@ The host address in the ___Example 'curl' commands___ section below references a
 
 1. Clone repository from GitHub
 2. Go to the `todoshaleapps` directory
-3. Execute `smoketest.sh`
-4. At the 2 password prompts at the beginning enter `todo123`
-5. Inspect the results
+3. Execute `smoketest.sh` locally with Postgres on my GKE cluster (if it's running)
+    
+```
+./smoketest.sh help
+usage:
+    smoketest <dbaddr> <dbport> <svcaddr> <svcport>
+Example:
+    smoketest localhost 5432 localhost 8080
+    
+./smoketest.sh 34.83.219.202 5432 localhost 8080
+```
+
+4. _OR_ Run against the app running on my GKE cluster
+
+```
+./smoketest.sh 34.83.219.202 5432 35.227.143.9 80
+```
 
 It's possible to deploy the application to another Kubernetes cluster using the Kubernetes specs in `todoshaleapps/kubernetes`. NOTE: the `svcTodod.yaml` and `svcPostgres.yaml` files should only be used for non-GKE deployments. In GKE create load balancer services (e.g., via the GCP/GKE web console).
 
@@ -121,7 +179,7 @@ kt logs todod-84f9c7788-q9g9h
 
 ## Example `curl` commands
 
-* Get a To Do List
+### Get a To Do List
 
 ```
 curl http://35.227.143.9:80/todos | jq "."
@@ -155,7 +213,7 @@ curl http://35.227.143.9:80/todos | jq "."
 }
 ```
 
-* Get a To Do Item
+### Get a To Do Item
   
 ```
 curl http://35.227.143.9:80/todos/3 | jq "."
@@ -169,7 +227,7 @@ curl http://35.227.143.9:80/todos/3 | jq "."
 }
 ```
 
-* Create a new To Do Item
+### Create a new To Do Item
 
 ```
 curl -i -X POST http://35.227.143.9:80/todos -H "Content-Type: application/json" -d "{\"note\":\"work out\",\"duedate\":\"2020-04-01T00:00:00Z\",\"repeat\":true,\"completed\":false}"
@@ -179,7 +237,7 @@ Date: Thu, 02 Apr 2020 02:49:08 GMT
 Content-Length: 0
 ```
 
-* Update To Do Item
+### Update To Do Item
 
 ```
 curl -i -X PUT http://35.227.143.9:80/todos/4 -H "Content-Type: application/json" -d "{\"id\":4,\"note\":\"workout extra hard\",\"duedate\":\"2525-04-02T13:13:13Z\",\"repeat\":true,\"completed\":true}"
@@ -189,7 +247,55 @@ Content-Length: 0
 
 ```
 
-* Delete a To Do Item
+### Create multiple (bulk) new To Do Items
+
+The first request in the bulk is invalid and will return an error.
+
+```
+curl -X POST http://35.227.143.9:80/todos?bulk=true -H "Content-Type: application/json" -d "{\"todolist\": [{\"id\":1,\"note\": \"get groceries\",\"duedate\": \"2020-04-01T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"pay bills\",\"duedate\": \"2020-04-02T00:00:00Z\",\"repeat\": false,\"completed\": false},{\"note\": \"walk dog\",\"duedate\": \"2020-04-03T12:00:00Z\",\"repeat\": true,\"completed\": false}]}" | jq "."
+{
+  "responses": [
+    {
+      "item": {
+        "id": 1,
+        "selfref": "",
+        "note": "get groceries",
+        "duedate": "2020-04-01T00:00:00Z",
+        "repeat": false,
+        "completed": false
+      },
+      "httpStatus": 400,
+      "error": "expected unpopulated To Do item ID, got Item ID = 1"
+    },
+    {
+      "item": {
+        "id": 35,
+        "selfref": "/todos/35",
+        "note": "pay bills",
+        "duedate": "2020-04-02T00:00:00Z",
+        "repeat": false,
+        "completed": false
+      },
+      "httpStatus": 201,
+      "error": ""
+    },
+    {
+      "item": {
+        "id": 36,
+        "selfref": "/todos/36",
+        "note": "walk dog",
+        "duedate": "2020-04-03T12:00:00Z",
+        "repeat": true,
+        "completed": false
+      },
+      "httpStatus": 201,
+      "error": ""
+    }
+  ]
+}
+```
+
+### Delete a To Do Item
 
 ```
 curl -i -X DELETE http://35.227.143.9:80/todos/7
