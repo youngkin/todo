@@ -1,0 +1,9 @@
+assembly-versioning-scheme: MajorMinorPatch
+mode: ContinuousDeployment
+next-version: 0.1.18
+branches:
+  master: {}
+  pull-request: {}
+ignore:
+  sha: []
+merge-message-formats: {}
