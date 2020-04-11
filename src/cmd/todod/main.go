@@ -102,12 +102,12 @@ func main() {
 		}
 	}()
 
-	HandleTermSignal(s, logger, 10)
+	handleTermSignal(s, logger, 10)
 }
 
-// hndleTermSignal provides a mechanism to catch SIGTERMs and gracefully
+// handleTermSignal provides a mechanism to catch SIGTERMs and gracefully
 // shutdown the service.
-func HandleTermSignal(s *http.Server, logger *log.Entry, timeout int) {
+func handleTermSignal(s *http.Server, logger *log.Entry, timeout int) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
