@@ -15,7 +15,7 @@ build() {
 
 buildARM() {
     cd src/cmd/todod
-    env GOOS=linux GOARCH=arm GOARM=7 go build
+    /usr/bin/env GOOS=linux GOARCH=arm GOARM=7 go build
     cd -
 }
 
