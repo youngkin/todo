@@ -27,7 +27,7 @@ func main() {
 
 	// Normally, info like this should NEVER come from the command line.
 	dbPort := flag.Int("dbport", 5432, "specifies the database's connection port")
-	dbHost := flag.String("dbhost", "34.83.219.202", "specifies the hostname or address of the database server")
+	dbHost := flag.String("dbhost", "192.168.1.130", "specifies the hostname or address of the database server")
 	dbUser := flag.String("dbuser", "todo", "DB user's login ID")
 	password := flag.String("passwd", "todo123", "DB user's password")
 	dbName := flag.String("dbname", "todo", "application's db name")

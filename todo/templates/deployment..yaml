@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todod
+  namespace: todo
+  labels:
+    app: todod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todod
+  template:
+    metadata:
+      labels:
+        app: todod
+    spec:
+      containers:
+        - name: todod
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
