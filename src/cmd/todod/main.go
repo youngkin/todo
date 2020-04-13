@@ -21,13 +21,30 @@ import (
 )
 
 func main() {
+	logger := logging.GetLogger().WithField(constants.Application, "ToDo")
+
+	dbportStr, ok := os.LookupEnv("POSTGRES_SERVICE_PORT")
+	if !ok {
+		logger.Warn("$POSTGRES_SERVICE_PORT not found, defaulting to 5432")
+		dbportStr = "5432"
+	}
+	dfltDbport, err := strconv.Atoi(dbportStr)
+	if err != nil {
+		logger.Warn("error converting POSTGRES_SERVICE_PORT to int, defaulting to 5432", dbportStr)
+		dfltDbport = 5432
+	}
+	dfltDbhost, ok := os.LookupEnv("POSTGRES_SERVICE_HOST")
+	if !ok {
+		logger.Warn("$POSTGRES_SERVICE_HOST not found, defaulting to localhost")
+		dfltDbhost = "localhost"
+	}
+
 	logLevel := flag.Int("loglevel", 4,
 		"specifies the logging level, 4(INFO) is the default. Levels run from 0 (PANIC) to 6 (TRACE)")
 	port := flag.Int("port", 8080, "specifies this service's listening port")
-
 	// Normally, info like this should NEVER come from the command line.
-	dbPort := flag.Int("dbport", 5432, "specifies the database's connection port")
-	dbHost := flag.String("dbhost", "192.168.1.130", "specifies the hostname or address of the database server")
+	dbPort := flag.Int("dbport", dfltDbport, "specifies the database's connection port")
+	dbHost := flag.String("dbhost", dfltDbhost, "specifies the hostname or address of the database server")
 	dbUser := flag.String("dbuser", "todo", "DB user's login ID")
 	password := flag.String("passwd", "todo123", "DB user's password")
 	dbName := flag.String("dbname", "todo", "application's db name")
@@ -36,7 +53,6 @@ func main() {
 
 	// 'logger' comes set with a default log level. This will be used if there's a problem
 	// with the provided log level.
-	logger := logging.GetLogger().WithField(constants.Application, "ToDo")
 	log.SetLevel(log.Level(*logLevel))
 
 	//
