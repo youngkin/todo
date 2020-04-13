@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/youngkin/todoshaleapps.svg?branch=master)](https://travis-ci.org/youngkin/todoshaleapps) [![Go Report Card](https://goreportcard.com/badge/github.com/youngkin/todoshaleapps)](https://goreportcard.com/report/github.com/youngkin/todoshaleapps)
 
-# todoshaleapps
+# To Do List Application
 
 Service for a simple application that manages a To Do list
 
