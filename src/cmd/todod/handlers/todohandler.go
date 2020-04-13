@@ -656,7 +656,7 @@ func PostRequestLauncher(h interface{}, done chan interface{}, rqstChan chan ins
 	default:
 		logger.Fatalf("PostRequestLauncher provided an 'h' parameter that is not of type 'handler'")
 	}
-	logger.Info("PostRequestLauncher starting...")
+	logger.Debug("PostRequestLauncher starting...")
 	for {
 		select {
 		case rqst := <-rqstChan:

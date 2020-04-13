@@ -110,6 +110,8 @@ func main() {
 		logger.WithFields(log.Fields{
 			constants.Port:     addr,
 			constants.LogLevel: log.GetLevel().String(),
+			constants.DBHost:   *dbHost,
+			constants.DBPort:   *dbPort,
 		}).Info("todod service starting")
 
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
